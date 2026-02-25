@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Proyectos C</title>
+
+<!-- PWA Meta -->
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Proyectos C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Proyectos C">
+<meta name="description" content="Bitácora personal de proyectos y logros del año">
+
+<!-- Apple touch icons -->
+<link rel="apple-touch-icon" href="icon-512.svg">
+<link rel="icon" type="image/svg+xml" href="icon-192.svg">
+
+<!-- Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: rgba(255,255,255,0.07);
+    --accent1: #c8a96e;
+    --accent2: #7b6ff0;
+    --accent3: #e06b8b;
+    --accent4: #5ec4a8;
+    --text: #e8e4dc;
+    --muted: rgba(232,228,220,0.4);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    cursor: default;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.5;
+  }
+
+  /* Offline banner */
+  #offline-banner {
+    display: none;
+    position: fixed;
+    top: calc(var(--safe-top) + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(224,107,139,0.15);
+    border: 1px solid rgba(224,107,139,0.3);
+    color: var(--accent3);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.5rem 1.2rem;
+    border-radius: 2px;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+  }
+  body.offline #offline-banner { display: block; }
+
+  /* Install banner */
+  #install-banner {
+    display: none;
+    position: fixed;
+    bottom: calc(var(--safe-bottom) + 1rem);
+    left: 1rem;
+    right: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--accent1);
+    padding: 1.2rem 1.5rem;
+    z-index: 9998;
+    backdrop-filter: blur(20px);
+    animation: slideUp 0.4s ease forwards;
+  }
+
+  #install-banner.visible { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+
+  .install-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    line-height: 1.6;
+  }
+
+  .install-text strong { color: var(--accent1); display: block; margin-bottom: 0.2rem; }
+
+  .install-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+  .btn-install {
+    background: var(--accent1);
+    color: var(--bg);
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-install:hover { opacity: 0.85; }
+
+  .btn-dismiss {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 0.8rem;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .btn-dismiss:hover { color: var(--text); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Background ambient */
+  .ambient {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .amb1 { width: 600px; height: 600px; background: rgba(200,169,110,0.04); top: -200px; right: -100px; }
+  .amb2 { width: 400px; height: 400px; background: rgba(123,111,240,0.05); bottom: 100px; left: -100px; }
+  .amb3 { width: 300px; height: 300px; background: rgba(224,107,139,0.03); top: 50%; left: 50%; }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Header */
+  header {
+    padding: 4rem 0 2.5rem;
+    text-align: center;
+    position: relative;
+  }
+
+  .header-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.5rem, 18vw, 7.5rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.4s;
+  }
+
+  header h1 .proj-word {
+    display: block;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 0.5em;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.1em;
+  }
+
+  header h1 .c-letter {
+    background: linear-gradient(135deg, var(--accent1) 0%, var(--accent3) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-style: italic;
+  }
+
+  .header-line {
+    width: 1px;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, var(--accent1), transparent);
+    margin: 1.8rem auto;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.6s;
+  }
+
+  .header-subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-style: italic;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Intro block */
+  .intro-block {
+    margin: 0 auto 2.5rem;
+    max-width: 680px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 1s;
+    border: 1px solid var(--border);
+    padding: 1.5rem 1.8rem;
+    position: relative;
+    background: rgba(255,255,255,0.01);
+  }
+
+  .intro-block::before {
+    content: '✦';
+    position: absolute;
+    top: -0.6em;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg);
+    padding: 0 0.8rem;
+    color: var(--accent1);
+    font-size: 0.7rem;
+  }
+
+  .intro-block p {
+    font-size: 0.9rem;
+    line-height: 1.85;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .intro-block p strong {
+    color: var(--text);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* Progress bar global */
+  .global-progress {
+    margin: 2rem 0;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 1s;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+  }
+
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .progress-pct {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent1);
+  }
+
+  .progress-track {
+    height: 1px;
+    background: var(--border);
+    position: relative;
+    overflow: visible;
+  }
+
+  .progress-fill {
+    height: 1px;
+    background: linear-gradient(to right, var(--accent1), var(--accent2));
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent1);
+    box-shadow: 0 0 10px var(--accent1);
+  }
+
+  /* Projects */
+  .projects {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 5rem;
+  }
+
+  .project {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards;
+    transition: border-color 0.3s;
+  }
+
+  .project:hover { border-color: rgba(255,255,255,0.12); }
+
+  .project::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  .project:hover::before { opacity: 1; }
+  .project[data-color="gold"]::before { background: linear-gradient(135deg, rgba(200,169,110,0.03) 0%, transparent 60%); }
+  .project[data-color="violet"]::before { background: linear-gradient(135deg, rgba(123,111,240,0.04) 0%, transparent 60%); }
+  .project[data-color="rose"]::before { background: linear-gradient(135deg, rgba(224,107,139,0.04) 0%, transparent 60%); }
+  .project[data-color="teal"]::before { background: linear-gradient(135deg, rgba(94,196,168,0.04) 0%, transparent 60%); }
+
+  .color-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px;
+    height: 100%;
+  }
+  .project[data-color="gold"] .color-bar { background: var(--accent1); }
+  .project[data-color="violet"] .color-bar { background: var(--accent2); }
+  .project[data-color="rose"] .color-bar { background: var(--accent3); }
+  .project[data-color="teal"] .color-bar { background: var(--accent4); }
+
+  .project-inner { padding: 2rem 2rem 2rem 2.5rem; }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  .project-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .project-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+  }
+
+  .project-name {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    font-weight: 300;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .project[data-color="gold"] .project-name em { color: var(--accent1); }
+  .project[data-color="violet"] .project-name em { color: var(--accent2); }
+  .project[data-color="rose"] .project-name em { color: var(--accent3); }
+  .project[data-color="teal"] .project-name em { color: var(--accent4); }
+  .project-name em { font-style: italic; }
+
+  .project-toggle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--muted);
+    transition: transform 0.3s, color 0.3s;
+    flex-shrink: 0;
+    margin-top: 0.3rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .project.open .project-toggle { transform: rotate(45deg); color: var(--text); }
+
+  .project-objective {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+    border-left: 1px solid var(--border);
+    padding-left: 1rem;
+  }
+
+  .project-progress { margin-bottom: 1.5rem; }
+
+  .proj-progress-bar {
+    height: 1px;
+    background: var(--border);
+    margin-top: 0.5rem;
+  }
+
+  .proj-progress-fill {
+    height: 1px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .project[data-color="gold"] .proj-progress-fill { background: var(--accent1); }
+  .project[data-color="violet"] .proj-progress-fill { background: var(--accent2); }
+  .project[data-color="rose"] .proj-progress-fill { background: var(--accent3); }
+  .project[data-color="teal"] .proj-progress-fill { background: var(--accent4); }
+
+  /* Collapsible */
+  .project-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .project.open .project-body { max-height: 1200px; }
+
+  /* Tasks */
+  .tasks { list-style: none; display: flex; flex-direction: column; }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    border-radius: 2px;
+  }
+  .task:last-child { border-bottom: none; }
+  .task:active { background: rgba(255,255,255,0.03); }
+
+  .task-check {
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .task-check svg {
+    width: 11px;
+    height: 11px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.25s, transform 0.25s;
+    stroke-width: 2.5;
+  }
+
+  .task.done .task-check { background: rgba(255,255,255,0.05); }
+  .project[data-color="gold"] .task.done .task-check { border-color: var(--accent1); color: var(--accent1); }
+  .project[data-color="violet"] .task.done .task-check { border-color: var(--accent2); color: var(--accent2); }
+  .project[data-color="rose"] .task.done .task-check { border-color: var(--accent3); color: var(--accent3); }
+  .project[data-color="teal"] .task.done .task-check { border-color: var(--accent4); color: var(--accent4); }
+  .task.done .task-check svg { opacity: 1; transform: scale(1); }
+
+  .task-text {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--text);
+    transition: color 0.3s;
+    flex: 1;
+  }
+  .task.done .task-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.15);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .project:nth-child(1) { animation-delay: 0.3s; }
+  .project:nth-child(2) { animation-delay: 0.45s; }
+  .project:nth-child(3) { animation-delay: 0.6s; }
+  .project:nth-child(4) { animation-delay: 0.75s; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 2rem 0 3rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.08);
+    text-transform: uppercase;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 480px) {
+    header { padding: 3rem 0 2rem; }
+    .project-inner { padding: 1.5rem 1.2rem 1.5rem 1.8rem; }
+    .intro-block { padding: 1.2rem 1.4rem; }
+    .task { gap: 0.85rem; }
+    .task-text { font-size: 0.88rem; }
+    .amb1, .amb2, .amb3 { display: none; } /* save GPU on small devices */
+  }
+
+  @media (min-width: 768px) {
+    .task:hover { background: rgba(255,255,255,0.02); }
+  }
+</style>
+</head>
+<body>
+
+<div id="offline-banner">Sin conexión — modo offline</div>
+
+<div id="install-banner">
+  <div class="install-text">
+    <strong>Instalar app</strong>
+    Añadir Proyectos C a la pantalla de inicio
+  </div>
+  <div class="install-actions">
+    <button class="btn-dismiss" id="btn-dismiss">No</button>
+    <button class="btn-install" id="btn-install">Instalar</button>
+  </div>
+</div>
+
+<div class="ambient amb1"></div>
+<div class="ambient amb2"></div>
+<div class="ambient amb3"></div>
+
+<div class="container">
+  <header>
+    <div class="header-label">Bitácora de logros</div>
+    <h1>
+      <span class="proj-word">Proyectos</span>
+      <span class="c-letter">C</span>
+    </h1>
+    <div class="header-line"></div>
+    <p class="header-subtitle">Los proyectos que tengo pensado iniciar y desarrollar a lo largo de este año.</p>
+  </header>
+
+  <div class="intro-block">
+    <p>
+      Estos son los proyectos que tengo pensado iniciar y desarrollar a lo largo de este año.<br><br>
+      <strong>Los puntos de cada proyecto no son necesarios seguirlos en su respectivo orden</strong>, por lo que, por ejemplo, puedes hacer primero el paso 3 de un proyecto y luego hacer el paso 1 de este mismo.
+    </p>
+  </div>
+
+  <div class="global-progress">
+    <div class="progress-header">
+      <span class="progress-label">Progreso total</span>
+      <span class="progress-pct" id="global-pct">0 / 0</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="global-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="projects" id="projects">
+
+    <!-- PROYECTO CONTENIDO -->
+    <div class="project" data-color="gold" data-project="0">
+      <div class="color-bar"></div>
+      <div class="project-inner">
+        <div class="project-header" onclick="toggleProject(0)">
+          <div>
+            <div class="project-meta"><span class="project-num">01</span></div>
+            <div class="project-name">Proyecto <em>Contenido</em></div>
+          </div>
+          <div class="project-toggle">+</div>
+        </div>
+        <div class="project-objective">Crear contenido en plataformas de la industria, mejorando cada vez más y siendo cada vez más conocido, para poder plantearme dedicarme a esto profesionalmente.</div>
+        <div class="project-progress">
+          <div class="progress-header">
+            <span class="progress-label">Avance</span>
+            <span class="progress-pct" id="pct-0">0 / 4</span>
+          </div>
+          <div class="proj-progress-bar">
+            <div class="proj-progress-fill" id="bar-0" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="project-body">
+          <ul class="tasks" data-project="0">
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Buscar una idea para explotarla y hacer contenido con ella, preferiblemente en la que salga mi cuerpo y/o mi cara</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Ser lo más constante posible en el canal — Paciencia</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Llegar a un punto clave en el canal (promesa a seguidores, especial por cifra determinada…) y hacer un face reveal</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Conseguir que alguien te pare por la calle porque te ha reconocido y/o te pida una foto</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROYECTO CORCHEA -->
+    <div class="project" data-color="violet" data-project="1">
+      <div class="color-bar"></div>
+      <div class="project-inner">
+        <div class="project-header" onclick="toggleProject(1)">
+          <div>
+            <div class="project-meta"><span class="project-num">02</span></div>
+            <div class="project-name">Proyecto <em>Corchea</em></div>
+          </div>
+          <div class="project-toggle">+</div>
+        </div>
+        <div class="project-objective">Empezar a crear música (principalmente urbana), ser cada vez más conocido e incluso poder plantearme dedicarme a ello profesionalmente.</div>
+        <div class="project-progress">
+          <div class="progress-header">
+            <span class="progress-label">Avance</span>
+            <span class="progress-pct" id="pct-1">0 / 5</span>
+          </div>
+          <div class="proj-progress-bar">
+            <div class="proj-progress-fill" id="bar-1" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="project-body">
+          <ul class="tasks" data-project="1">
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Conocer y practicar todos los conceptos para crear música (principalmente urbana)</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Hacer tu primera base</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Escribir la letra de esta primera base</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Colaborar con un artista emergente, muy preferiblemente que tengáis ya una relación amistosa de antes</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Llegar a un punto clave en la carrera y hacer un face reveal (sin forzarlo). Conseguir que alguien te reconozca en la calle como artista</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROYECTO CAMINO -->
+    <div class="project" data-color="rose" data-project="2">
+      <div class="color-bar"></div>
+      <div class="project-inner">
+        <div class="project-header" onclick="toggleProject(2)">
+          <div>
+            <div class="project-meta"><span class="project-num">03</span></div>
+            <div class="project-name">Proyecto <em>Camino</em></div>
+          </div>
+          <div class="project-toggle">+</div>
+        </div>
+        <div class="project-objective">Mejorar el aspecto físico, eliminando inseguridades y camuflando así casi al completo los defectos de este.</div>
+        <div class="project-progress">
+          <div class="progress-header">
+            <span class="progress-label">Avance</span>
+            <span class="progress-pct" id="pct-2">0 / 3</span>
+          </div>
+          <div class="proj-progress-bar">
+            <div class="proj-progress-fill" id="bar-2" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="project-body">
+          <ul class="tasks" data-project="2">
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Iniciar una rutina semanal y seguirla estrictamente</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Poder hacer al menos una acrobacia de "riesgo" en suelo</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Sentirse lo más cómodo posible con mi cuerpo</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROYECTO CINDERELLA -->
+    <div class="project" data-color="teal" data-project="3">
+      <div class="color-bar"></div>
+      <div class="project-inner">
+        <div class="project-header" onclick="toggleProject(3)">
+          <div>
+            <div class="project-meta"><span class="project-num">04</span></div>
+            <div class="project-name">Proyecto <em>Cinderella</em></div>
+          </div>
+          <div class="project-toggle">+</div>
+        </div>
+        <div class="project-objective">Escribir un libro y conseguir publicarlo con una editorial.</div>
+        <div class="project-progress">
+          <div class="progress-header">
+            <span class="progress-label">Avance</span>
+            <span class="progress-pct" id="pct-3">0 / 3</span>
+          </div>
+          <div class="proj-progress-bar">
+            <div class="proj-progress-fill" id="bar-3" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="project-body">
+          <ul class="tasks" data-project="3">
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Hacer una sinopsis de la historia que va a ser escrita</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Empezar a escribir la novela, sin prisa pero sin pausa</span>
+            </li>
+            <li class="task" onclick="toggleTask(this)">
+              <div class="task-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <span class="task-text">Una vez acabado el libro, crear el lomo, portada y contraportada (con IA, dibujadas o por artista) — opcionalmente: mapa, personajes, ilustraciones adicionales</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>Todo lo que existe empezó siendo un sueño</footer>
+</div>
+
+<script>
+  // ── Service Worker ─────────────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(err => console.warn('SW registration failed:', err));
+    });
+  }
+
+  // ── Offline detection ──────────────────────────────────────────────────────
+  function updateOnlineStatus() {
+    document.body.classList.toggle('offline', !navigator.onLine);
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
+
+  // ── Install prompt ─────────────────────────────────────────────────────────
+  let deferredPrompt = null;
+  const installBanner = document.getElementById('install-banner');
+  const btnInstall = document.getElementById('btn-install');
+  const btnDismiss = document.getElementById('btn-dismiss');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const dismissed = localStorage.getItem('pwa-dismissed');
+    if (!dismissed) {
+      setTimeout(() => installBanner.classList.add('visible'), 2000);
+    }
+  });
+
+  btnInstall.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBanner.classList.remove('visible');
+  });
+
+  btnDismiss.addEventListener('click', () => {
+    installBanner.classList.remove('visible');
+    localStorage.setItem('pwa-dismissed', '1');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBanner.classList.remove('visible');
+    deferredPrompt = null;
+  });
+
+  // ── App state ──────────────────────────────────────────────────────────────
+  const TOTALS = [4, 5, 3, 3];
+
+  function getState() {
+    try { return JSON.parse(localStorage.getItem('logros') || '{}'); }
+    catch { return {}; }
+  }
+
+  function saveState(state) {
+    localStorage.setItem('logros', JSON.stringify(state));
+  }
+
+  function getOpenProjects() {
+    try { return JSON.parse(localStorage.getItem('openProjects') || '[]'); }
+    catch { return []; }
+  }
+
+  function saveOpenProjects(arr) {
+    localStorage.setItem('openProjects', JSON.stringify(arr));
+  }
+
+  function toggleProject(idx) {
+    const projects = document.querySelectorAll('.project');
+    const p = projects[idx];
+    const isOpen = p.classList.toggle('open');
+    const openArr = getOpenProjects();
+    const i = openArr.indexOf(idx);
+    if (isOpen && i === -1) openArr.push(idx);
+    if (!isOpen && i !== -1) openArr.splice(i, 1);
+    saveOpenProjects(openArr);
+  }
+
+  function toggleTask(el) {
+    const list = el.parentElement;
+    const pIdx = parseInt(list.dataset.project);
+    const tasks = Array.from(list.children);
+    const tIdx = tasks.indexOf(el);
+    const state = getState();
+    const key = `${pIdx}-${tIdx}`;
+    state[key] = !state[key];
+    saveState(state);
+    el.classList.toggle('done', state[key]);
+    // Haptic feedback on mobile
+    if (navigator.vibrate) navigator.vibrate(state[key] ? [30] : [10]);
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const state = getState();
+    let totalDone = 0, totalAll = 0;
+    for (let p = 0; p < 4; p++) {
+      const total = TOTALS[p];
+      let done = 0;
+      for (let t = 0; t < total; t++) {
+        if (state[`${p}-${t}`]) done++;
+      }
+      totalDone += done;
+      totalAll += total;
+      const pct = total > 0 ? (done / total) * 100 : 0;
+      document.getElementById(`bar-${p}`).style.width = pct + '%';
+      document.getElementById(`pct-${p}`).textContent = `${done} / ${total}`;
+    }
+    const globalPct = totalAll > 0 ? (totalDone / totalAll) * 100 : 0;
+    document.getElementById('global-bar').style.width = globalPct + '%';
+    document.getElementById('global-pct').textContent = `${totalDone} / ${totalAll}`;
+  }
+
+  function loadState() {
+    const state = getState();
+    const projects = document.querySelectorAll('.project');
+    projects.forEach((proj, pIdx) => {
+      proj.querySelectorAll('.task').forEach((task, tIdx) => {
+        if (state[`${pIdx}-${tIdx}`]) task.classList.add('done');
+      });
+    });
+    const savedOpen = localStorage.getItem('openProjects');
+    if (savedOpen) {
+      JSON.parse(savedOpen).forEach(idx => {
+        if (projects[idx]) projects[idx].classList.add('open');
+      });
+    } else {
+      projects.forEach(p => p.classList.add('open'));
+      saveOpenProjects([0,1,2,3]);
+    }
+    updateProgress();
+  }
+
+  loadState();
+</script>
+</body>
+</html>

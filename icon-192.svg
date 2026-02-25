@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#0a0a0f"/>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c8a96e"/>
+      <stop offset="50%" stop-color="#e06b8b"/>
+      <stop offset="100%" stop-color="#7b6ff0"/>
+    </linearGradient>
+  </defs>
+  <text x="96" y="136" font-family="Georgia, serif" font-size="110" font-style="italic" font-weight="900" text-anchor="middle" fill="url(#g)">C</text>
+  <text x="96" y="168" font-family="monospace" font-size="13" letter-spacing="4" text-anchor="middle" fill="rgba(232,228,220,0.35)">PROYECTOS</text>
+</svg>
