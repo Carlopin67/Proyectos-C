@@ -47,3 +47,8 @@ Abre `http://localhost:8080` y desde ahí puedes probar el modo offline.
 ## Nota importante
 
 La PWA **requiere HTTPS** para funcionar (el service worker no se activa en HTTP plano, excepto en localhost). Usa GitHub Pages o Netlify para tener HTTPS gratis.
+
+
+
+
+https://carlopin67.github.io/Proyectos-C/
